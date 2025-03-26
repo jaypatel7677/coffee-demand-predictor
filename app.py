@@ -1,25 +1,5 @@
 {
- "cells": [
-  {
-   "cell_type": "code",
-   "execution_count": 23,
-   "id": "b5354bb5-9cc6-4661-89bc-55a46bc18600",
-   "metadata": {},
-   "outputs": [],
-   "source": [
-    "import streamlit as st\n",
-    "import pandas as pd\n",
-    "from sklearn.ensemble import RandomForestRegressor\n",
-    "import numpy as np\n",
-    "\n",
-    "# --- App Config ---\n",
-    "st.set_page_config(\n",
-    "    page_title=\"Coffee Demand AI\",\n",
-    "    page_icon=\"☕\",\n",
-    "    layout=\"wide\"\n",
-    ")\n",
-    "\n",
-    "# --- Model Loader with Error Handling ---\n",
+   [ "# --- Model Loader with Error Handling ---\n",
     "@st.cache_resource\n",
     "def load_model():\n",
     "    try:\n",
@@ -89,35 +69,4 @@
     "    - ☔ **Rainy days:** Promote delivery/takeout options\n",
     "    \"\"\")"
    ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": null,
-   "id": "e367fa68-4780-40a3-b792-34266b834b21",
-   "metadata": {},
-   "outputs": [],
-   "source": []
-  }
- ],
- "metadata": {
-  "kernelspec": {
-   "display_name": "Python 3 (ipykernel)",
-   "language": "python",
-   "name": "python3"
-  },
-  "language_info": {
-   "codemirror_mode": {
-    "name": "ipython",
-    "version": 3
-   },
-   "file_extension": ".py",
-   "mimetype": "text/x-python",
-   "name": "python",
-   "nbconvert_exporter": "python",
-   "pygments_lexer": "ipython3",
-   "version": "3.12.4"
-  }
- },
- "nbformat": 4,
- "nbformat_minor": 5
 }
