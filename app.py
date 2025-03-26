@@ -1,72 +1,38 @@
-{
-   [ "# --- Model Loader with Error Handling ---\n",
-    "@st.cache_resource\n",
-    "def load_model():\n",
-    "    try:\n",
-    "        # Generate better synthetic data\n",
-    "        np.random.seed(42)\n",
-    "        dates = pd.date_range(\"2023-01-01\", periods=180)\n",
-    "        data = {\n",
-    "            \"temperature\": np.clip(np.random.normal(25, 7, 180), 5, 40),\n",
-    "            \"rainfall\": np.random.poisson(3, 180),\n",
-    "            \"weekend\": (dates.weekday >= 5).astype(int),\n",
-    "            \"holiday\": np.random.binomial(1, 0.05, 180),\n",
-    "            \"sales\": np.clip(80 + 30*(dates.weekday >=5) - 10*np.random.poisson(3, 180), 0, 300)\n",
-    "        }\n",
-    "        df = pd.DataFrame(data)\n",
-    "        \n",
-    "        model = RandomForestRegressor(n_estimators=100)\n",
-    "        model.fit(df[[\"temperature\", \"rainfall\", \"weekend\", \"holiday\"]], df[\"sales\"])\n",
-    "        return model\n",
-    "    except Exception as e:\n",
-    "        st.error(f\"Model failed to load: {str(e)}\")\n",
-    "        return None\n",
-    "\n",
-    "# --- UI Layout ---\n",
-    "col1, col2 = st.columns([1, 2])\n",
-    "\n",
-    "with col1:\n",
-    "    st.header(\"Input Parameters\")\n",
-    "    temp = st.slider(\"Temperature (°C)\", 0, 40, 25, help=\"Higher temps usually increase sales\")\n",
-    "    rain = st.select_slider(\"Rainfall\", options=[\"None\", \"Light\", \"Medium\", \"Heavy\"], \n",
-    "                          help=\"Rain reduces foot traffic\")\n",
-    "    is_weekend = st.toggle(\"Weekend\")\n",
-    "    is_holiday = st.toggle(\"Holiday\")\n",
-    "    \n",
-    "    # Convert rainfall to mm\n",
-    "    rain_mm = {\"None\": 0, \"Light\": 2, \"Medium\": 5, \"Heavy\": 10}[rain]\n",
-    "\n",
-    "with col2:\n",
-    "    st.header(\"Prediction\")\n",
-    "    model = load_model()\n",
-    "    if model:\n",
-    "        input_data = pd.DataFrame({\n",
-    "            \"temperature\": [temp],\n",
-    "            \"rainfall\": [rain_mm],\n",
-    "            \"weekend\": [int(is_weekend)],\n",
-    "            \"holiday\": [int(is_holiday)]\n",
-    "        })\n",
-    "        \n",
-    "        prediction = model.predict(input_data)[0]\n",
-    "        st.metric(\"Expected Sales\", f\"{max(0, int(prediction))} cups\", \n",
-    "                delta=f\"{int((prediction-100)/100*100)}% vs average\")\n",
-    "        \n",
-    "        # Visual feedback\n",
-    "        if prediction > 150:\n",
-    "            st.success(\"🔥 Hot day ahead! Prepare extra staff and ingredients.\")\n",
-    "        elif prediction < 70:\n",
-    "            st.warning(\"Slow day expected. Consider reducing temporary staff.\")\n",
-    "    else:\n",
-    "        st.error(\"Model unavailable - please refresh the page\")\n",
-    "\n",
-    "# --- Business Insights Section ---\n",
-    "st.divider()\n",
-    "with st.expander(\"💡 Business Recommendations\"):\n",
-    "    st.write(\"\"\"\n",
-    "    **How to use these predictions:**\n",
-    "    - 📈 **High sales forecast:** Schedule more staff, prep extra inventory\n",
-    "    - 📉 **Low sales forecast:** Reduce perishable orders, plan maintenance\n",
-    "    - ☔ **Rainy days:** Promote delivery/takeout options\n",
-    "    \"\"\")"
-   ]
-}
+import streamlit as st
+import pandas as pd
+import numpy as np
+from sklearn.ensemble import RandomForestRegressor
+
+# --- App Title ---
+st.title("☕ Coffee Shop Demand Predictor")
+st.write("Predict daily sales based on weather and calendar data")
+
+# --- Model Training ---
+@st.cache_data
+def train_model():
+    # Generate synthetic data
+    dates = pd.date_range("2023-01-01", periods=180)
+    df = pd.DataFrame({
+        "temperature": np.clip(np.random.normal(25, 7, 180), 5, 40),
+        "rainfall": np.random.poisson(3, 180),
+        "weekend": (dates.weekday >= 5).astype(int),
+        "sales": np.clip(80 + 30*(dates.weekday >=5) - 10*np.random.poisson(3, 180), 0, 300)
+    })
+    
+    # Train model
+    model = RandomForestRegressor()
+    model.fit(df[["temperature", "rainfall", "weekend"]], df["sales"])
+    return model
+
+# --- User Inputs ---
+with st.sidebar:
+    st.header("Input Parameters")
+    temp = st.slider("Temperature (°C)", 5, 40, 25)
+    rain = st.slider("Rainfall (mm)", 0, 10, 2)
+    is_weekend = st.checkbox("Weekend")
+
+# --- Prediction ---
+if st.button("Predict Sales"):
+    model = train_model()
+    prediction = model.predict([[temp, rain, int(is_weekend)]])[0]
+    st.success(f"Predicted sales: {int(prediction)} cups")
